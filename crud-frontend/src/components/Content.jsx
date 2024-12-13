@@ -1,19 +1,26 @@
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function Content() {
 
-    const [title, setTitle] = useState([]);
-    const [text, setText] = useState([]);
+    const [title, setTitle] = useState('');
+    const [text, setText] = useState('');
     const [successMessage, setSuccessMessage] = useState(false);
     const [errorMessage, setErrorMessage] = useState(false);
+    const [contents, setContents] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
 
+        if (!title || !text) {
+            setErrorMessage("Please fill in the required details first to publish your post.");
+            return;
+        };
+
         try {
-            const response = await axios.post('http://localhost:5001/content', { title, text });
+            const response = await axios.post('http://localhost:5001/publishedContent', { title, text });
 
             if(response.data.success) {
                 setSuccessMessage("Your Blog/Post has been published to the main website.");
@@ -30,6 +37,49 @@ function Content() {
             setErrorMessage("Failed to publish, please try again later.");
         };
     };
+
+    const handleSaveAsDraft = async (event) => {
+        event.preventDefault();
+
+        if (!title.trim() || !text.trim()) {
+            setErrorMessage("Please fill in the required details first to save as a draft.");
+            return;
+        };
+
+        try {
+            const response = await axios.post("http://localhost:5001/draftContent", {title,text});
+
+            if (response.data.success) {
+                setSuccessMessage("Your Blog/Post has been saved as a draft.");
+            } else {
+                setErrorMessage("Failed to save your Blog/Post as a draft.");
+            }
+
+            setTimeout(() => {
+                setSuccessMessage('') || setErrorMessage('');
+            }, 5500);
+        }
+        catch(err) {
+            console.error("Error Publishing: " + err);
+            setErrorMessage("Failed to publish, please try again later.");
+        };
+    };
+
+    useEffect(() => {
+        const fetchContentInfo = async () => {
+            setLoading(true)
+            try {
+                const response = await axios.get("http://localhost:5001/getContent");
+                setContents(response.data);
+                setLoading(false);
+            }
+            catch(err) {
+                console.error("Error fetching contents information.", err)
+                setLoading(false);
+            }
+        }
+        fetchContentInfo();
+    }, []);
 
   return (
     <div className='ContentPage flex flex-col min-h-screen'>
@@ -93,7 +143,33 @@ function Content() {
             </svg>
         </h1>
         <p className='ml-10 mt-3'>Write blog/post here to be displayed in the main website</p>
-        <div className="content flex-grow flex items-center mx-6 my-10">
+        <div className="stats shadow ml-6 mt-10 w-auto sm:w-2/4">
+            <div className="stat">
+                {loading ? (
+                    <>
+                        <span className="loading loading-dots loading-lg"></span>
+                        <p>Loading Content Information...</p>
+                    </>
+                ) : (
+                    <>
+                        {contents.length > 0 ? (
+                            <div>
+                                <div className='stat-title font-bold'>Total Created Blog/Post</div>
+                                <div className='stat-value ml-2'>{contents[contents.length - 1].content_id}</div>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className='stat-title font-bold'>Total Published Blog/Post</div>
+                                <div className='stat-value mt-3'>
+                                    0
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+        <div className="content flex-grow flex items-center mx-6 -mt-20" style={{userSelect: "none"}}>
           <div className="hero justify-center bg-base-200 w-auto md:w-3/4">
               <div className="hero-content flex-row lg:flex-row-reverse">
                 <img src="" className="max-w-sm rounded-lg shadow-2xl" />
@@ -110,6 +186,7 @@ function Content() {
                     className="input w-full max-w-xs mb-4"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    required
                     />
                     <textarea
                     className="textarea textarea-bordered w-full mb-3"
@@ -117,13 +194,23 @@ function Content() {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     required
-                    ></textarea>
+                    />
                     <button className="btn btn-success btn-sm rounded-md" type="submit" onClick={handleSubmit}>
-                        Submit
+                        Publish
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" className="bi bi-send mt-[2px]" viewBox="0 0 16 16">
+                            <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
+                        </svg>
                     </button>
-                    <Link to={'/contentOutput'} className='btn btn-neutral btn-sm rounded-md mx-3'>Check Blog/Post</Link>
+                    <button className='btn btn-secondary btn-sm rounded-md mx-3' onClick={handleSaveAsDraft}>
+                        Save as drafts
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-floppy" viewBox="0 0 16 16">
+                            <path d="M11 2H9v3h2z"/>
+                            <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/>
+                        </svg>
+                    </button>
+                    <Link to={'/contentOutput'} className='btn btn-neutral btn-sm rounded-md'>Check Blog/Post</Link>
                     {successMessage && <p className='text-lime-400 font-bold w-auto my-5'>{successMessage}</p>}
-                    {errorMessage && <p className='text-red-600 font-bold'>{errorMessage}</p>}
+                    {errorMessage && <p className='text-red-600 font-bold w-auto my-5'>{errorMessage}</p>}
                   </div>
               </div>
           </div>

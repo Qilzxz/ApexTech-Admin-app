@@ -23,8 +23,22 @@ function ContentOutput() {
                 setLoading(true)
             }
         };
-        fetchContent();
+        fetchContent(); 
     }, []);
+
+    const renderStatusBadge = (status) => {
+        if (status === 'published') {
+            return <div className='badge badge-success'>Published</div>
+        } else {
+            return (
+                <>
+                    <div className='badge badge-neutral pointer-events-auto'>Draft</div>
+                    <div className='badge badge-primary mx-3 hover:cursor-pointer'>Click here to publish</div>
+                </>
+            )
+        }
+        return null;
+    };
 
   return (
     <div className='font-bold text-3xl flex justify-center items-center h-screen'>
@@ -61,14 +75,13 @@ function ContentOutput() {
                                     </p>
                                     <div className='divider'></div>
                                     <p className='text-base'>{content.title}</p>
-                                    <div className="card-actions justify-end">
-                                    </div>
+                                    <div className='badge-container'>{renderStatusBadge(content.status)}</div>
                                 </div>
                             </div>
                         )) : (
                             <div className='text-lg'>
                                 <span className='flex justify-center'>No content available</span>
-                                Upload a blog/post at 
+                                Upload a blog/post at
                                 <Link className='font-bold text-blue-500' to='/content'> Content </Link>
                                 page in order to appear
                             </div>

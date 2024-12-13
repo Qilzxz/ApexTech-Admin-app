@@ -31,7 +31,7 @@ client.connect((err) => {
     }
     console.log("Database connection established");
 
-    const query = `SELECT content_id, text, title, created_at FROM content ORDER BY content_id ASC;`;
+    const query = `SELECT content_id, text, title, created_at, status FROM content ORDER BY content_id ASC;`;
     console.log("Executing query:", query);
 
     client.query(query, (err, result) => {
@@ -93,7 +93,7 @@ app.post("/newsletter", async (req, res) => {
     };
 });
 
-app.post("/content", async (request, respond) => {
+app.post("/publishedContent", async (request, respond) => {
     const { title, text } = request.body;
 
     if (!title || !text) {
@@ -101,8 +101,8 @@ app.post("/content", async (request, respond) => {
     };
 
     try {
-        const contentResult = await client.query(`INSERT INTO content (text, title, created_at)
-            VALUES ($1, $2, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kuala_Lumpur')
+        const contentResult = await client.query(`INSERT INTO content (text, title, created_at, status)
+            VALUES ($1, $2, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kuala_Lumpur', 'published')
             RETURNING *
             `, [title, text]
         );
@@ -112,6 +112,27 @@ app.post("/content", async (request, respond) => {
     catch(error) {
         console.error(`Error inserting content details into the database: ` + error);
         respond.status(500).json({success: false, message:  `Server error. Try again later.`});
+    };
+});
+
+app.post("/draftContent", async (req, res) => {
+    const { title, text } = req.body;
+
+    if (!title || !text) {
+        return res.status(400).json({ success: false, data: 'Title or text of the content is required.' });
+    };
+
+    try {
+        const saveDraftContentRes = await client.query(`INSERT INTO content (text, title, created_at, status)
+            VALUES ($1, $2, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kuala_Lumpur', 'draft') RETURNING *;`
+        , [title, text]
+        );
+
+        res.status(200).json({ success: true, data: saveDraftContentRes.rows[0]});
+    }
+    catch(error) {
+        console.error(`Error inserting content details into the database: ` + error);
+        res.status(500).json({ success: false, data: `Server error! Please try again later.` });
     };
 });
 
