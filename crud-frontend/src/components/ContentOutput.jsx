@@ -10,7 +10,9 @@ function ContentOutput() {
     const [troubleShootMessage, setTroubleShootMessage] = useState('')
     const [errorMessage, setErrorMessage] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isContentModalOpen, setIsContentModalOpen] = useState(false);
     const [selectedContentId, setSelectedContentId] = useState(null);
+    const [save, setSave] = useState(false);
 
     useEffect(() => {
         const fetchContent = async () => {
@@ -71,7 +73,7 @@ function ContentOutput() {
         }
     };
 
-    const formatDate = (dateString) => {
+    /*const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleString('en-US', {
             weekday: 'long',
@@ -84,9 +86,36 @@ function ContentOutput() {
             hour12: true,
             timeZone: 'Asia/Kuala_Lumpur',
         });
-    };
+    };*/
 
-    const renderStatusBadge = (status, content_id, content, published_at) => {
+    const handleContentChange = (contentId, field, value) => {
+        setContent(prevContents =>
+          prevContents.map(content =>
+            content.content_id === contentId ? { ...content, [field]: value } : content
+          )
+        );
+      };
+
+    const handleSaveContent = async (title, text, content_id) => {
+         try {
+            const response = await axios.post("http://localhost:5001/saveContent", {title, text, content_id});
+
+            if (response.data.success) {
+                setSave(true);
+                setTimeout(() => {
+                    setMessage("Content saved successfully! You can now continue editing or close this edit box")
+                }, 5000);
+            }
+         }
+         catch(error) {
+            console.log('Error saving content: ' + error.message);
+            setErrorMessage("Failed to save changes: " + error.message);
+            setIsContentModalOpen(true);
+         }
+    }
+      
+
+    const renderStatusBadge = (status, content_id) => {
 
         if (status === 'published') {
             return (
@@ -108,7 +137,13 @@ function ContentOutput() {
             return (
                 <>
                     <div className='badge badge-neutral pointer-events-auto'>Draft</div>
-                    <div className='badge badge-secondary ml-3'>Edit</div>
+                    <div className='badge badge-secondary ml-3'
+                        onClick={() => {
+                            setSelectedContentId(content_id);
+                            setIsContentModalOpen(true)
+                        }}>
+                        Edit
+                    </div>
                     <div className='badge badge-primary mx-3 hover:cursor-pointer' onClick={() => handlePublishContent(content_id)}>
                         Click here to publish
                     </div>
@@ -185,13 +220,47 @@ function ContentOutput() {
                 <div className="modal modal-open">
                     <div className="modal-box">
                         <h3 className="font-bold text-lg">Delete Content</h3>
-                        <p className="py-4">Are you sure you want to delete content with ID {selectedContentId}?</p>
+                        <p className="py-4" onClick={() => setIsContentModalOpen(false)}>
+                            Are you sure you want to delete content with ID {selectedContentId}?
+                        </p>
                         <div className="modal-action">
                             <button className="btn btn-primary btn-sm" onClick={() => handleDeleteContent()}>Yes, Delete</button>
                             <button className="btn btn-sm btn-neutral" onClick={() => setIsModalOpen(false)}>Cancel</button>
                         </div>
                     </div>
                 </div>
+            )}
+            {isContentModalOpen && (
+              <div id="my_modal_1" className="modal modal-open">
+                <div className="modal-box">
+                  <h3 className="font-bold text-lg">Edit Content Id: {selectedContentId}</h3>
+                {contents.length > 0 ? (
+                contents
+                  .filter(content => content.content_id === selectedContentId)
+                  .map(content => (
+                      <div key={content.content_id}>
+                          <input type='text' className='input text-lg my-2 p-2 rounded-md' value={content.text}
+                            onChange={(e) => handleContentChange(content.content_id, 'text', e.target.value)}
+                          />
+                          <textarea className='textarea textarea-bordered min-h-48 w-full mb-3 whitespace-pre-wrap' value={content.title}
+                            onChange={(e) => handleContentChange(content.content_id, 'title', e.target.value)}
+                          />
+                          {save ? (<p className='text-xs text-neutral-500'>{message}</p>)
+                          : <p className='text-xs text-red-500'>{errorMessage}</p>}
+                          <div className="modal-action">
+                            <button className="btn btn-sm" onClick={() => setIsContentModalOpen(false)}>Close</button>
+                            <button className='btn btn-secondary btn-sm rounded-md'
+                            onClick={() => handleSaveContent(content.title, content.text, selectedContentId)}>
+                                Save
+                            </button>
+                          </div>
+                      </div>
+                  ))
+                ) : (
+                  <p>Can't Fetch Content!</p>
+                )}
+                </div>
+              </div>
             )}
         </div>
     );

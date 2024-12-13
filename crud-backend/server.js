@@ -211,6 +211,23 @@ app.post("/deleteContent", async (req, res) => {
     };
 });
 
+app.post("/saveContent", async (req, res) => {
+    const { title, text, content_id } = req.body;
+
+    try {
+        const saveResult = await client.query(
+            `UPDATE CONTENT SET title = $1, text = $2 WHERE content_id = $3`,
+            [title, text, content_id]
+        );
+
+        res.status(200).json({ success: true, data: saveResult.rows[0] });
+    }
+    catch(error) {
+        console.error(`Error saving content into database`, error);
+        res.status(500).json({ success: false, message: `Server error! Please try again` });
+    };
+});
+
 const PORT = 5001;
 app.listen(PORT, () => {
     console.log(`Server running in port ${PORT} or http://localhost:5001`);
