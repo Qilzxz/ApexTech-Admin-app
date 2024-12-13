@@ -159,7 +159,7 @@ function Content() {
                             </div>
                         ) : (
                             <div>
-                                <div className='stat-title font-bold'>Total Published Blog/Post</div>
+                                <div className='stat-title font-bold'>Total Created Blog/Post</div>
                                 <div className='stat-value mt-3'>
                                     0
                                 </div>
@@ -178,7 +178,7 @@ function Content() {
                     <p className="my-4 min-w-64">
                     Use this section to create and publish new blog posts or updates. Fill out the necessary details,
                     including the content to ensure your post is ready for publication.
-                    Once you're satisfied with the content, hit the "Submit" button to publish the blog/post.
+                    Once you're satisfied with the content, hit the "Publish" button to publish the blog/post.
                     </p>
                     <input
                     type="text"
@@ -189,7 +189,7 @@ function Content() {
                     required
                     />
                     <textarea
-                    className="textarea textarea-bordered w-full mb-3"
+                    className="textarea textarea-bordered w-full mb-3 whitespace-pre-wrap"
                     placeholder="Text here"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -203,9 +203,8 @@ function Content() {
                     </button>
                     <button className='btn btn-secondary btn-sm rounded-md mx-3' onClick={handleSaveAsDraft}>
                         Save as drafts
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-floppy" viewBox="0 0 16 16">
-                            <path d="M11 2H9v3h2z"/>
-                            <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="currentColor" class="bi bi-archive " viewBox="0 0 16 16">
+                            <path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5zm13-3H1v2h14zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
                         </svg>
                     </button>
                     <Link to={'/contentOutput'} className='btn btn-neutral btn-sm rounded-md'>Check Blog/Post</Link>

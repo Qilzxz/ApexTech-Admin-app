@@ -94,17 +94,17 @@ app.post("/newsletter", async (req, res) => {
 });
 
 app.post("/publishedContent", async (request, respond) => {
-    const { title, text } = request.body;
+    const { title, text, published_at } = request.body;
 
     if (!title || !text) {
         return respond.status(400).json({ success: false, data: 'Title or text of the content is required.' });
     };
 
     try {
-        const contentResult = await client.query(`INSERT INTO content (text, title, created_at, status)
+        const contentResult = await client.query(`INSERT INTO content (text, title, created_at, status, published_at)
             VALUES ($1, $2, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kuala_Lumpur', 'published')
             RETURNING *
-            `, [title, text]
+            `, [title, text, published_at]
         );
 
         respond.status(200).json({success: true, data: contentResult.rows[0]});
@@ -116,7 +116,7 @@ app.post("/publishedContent", async (request, respond) => {
 });
 
 app.post("/publishContent", async (req, res) => {
-    const { content_id } = req.body;
+    const { content_id} = req.body;
 
     if (!content_id) {
         return res.status(400).json({ success: false, message: 'Content ID is required to publish!' });
@@ -130,6 +130,11 @@ app.post("/publishContent", async (req, res) => {
              WHERE content_id = $1
              RETURNING *;`,[content_id]
         );
+
+        await client.query(
+            `ALTER TABLE CONTENT
+            ALTER COLUMN published_at SET DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kuala_Lumpur');`
+        )
 
         if (publishResult.rows.length > 0) {
             res.status(200).json({ success: true, data: publishResult.rows[0] });
@@ -145,23 +150,64 @@ app.post("/publishContent", async (req, res) => {
 
 
 app.post("/draftContent", async (req, res) => {
-    const { title, text } = req.body;
+    const { title, text} = req.body;
 
     if (!title || !text) {
         return res.status(400).json({ success: false, data: 'Title or text of the content is required.' });
     };
 
     try {
-        const saveDraftContentRes = await client.query(`INSERT INTO content (text, title, created_at, status)
+        const saveDraftContentRes = await client.query(
+            `INSERT INTO content (text, title, created_at, status)
             VALUES ($1, $2, CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kuala_Lumpur', 'draft') RETURNING *;`
         , [title, text]
+        );
+
+        await client.query(
+            `ALTER TABLE CONTENT
+            ALTER COLUMN published_at SET DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kuala_Lumpur');`
         );
 
         res.status(200).json({ success: true, data: saveDraftContentRes.rows[0]});
     }
     catch(error) {
-        console.error(`Error inserting content details into the database: ` + error);
-        res.status(500).json({ success: false, data: `Server error! Please try again later.` });
+        console.error(`Error saving content as draft into database: ` + error);
+        res.status(500).json({ success: false, message: `Server error! Please try again later.` });
+    };
+});
+
+app.post("/deleteContent", async (req, res) => {
+    const { content_id } = req.body;
+
+    try {
+        const deleteContentResult = await client.query(
+            `DELETE FROM content WHERE content_id = $1 RETURNING *;`, [content_id] 
+        );
+
+        if (deleteContentResult.rows.length > 0) {
+            await client.query(`
+                WITH RESEQUENCED AS (
+                    SELECT content_id, ROW_NUMBER() OVER (ORDER BY content_id ASC) AS new_id
+                    FROM content
+                )
+                UPDATE content
+                SET content_id = new_id
+                FROM RESEQUENCED
+                WHERE content.content_id = RESEQUENCED.content_id;
+            `);
+
+            await client.query(`
+                SELECT setval(pg_get_serial_sequence('content', 'content_id'), COALESCE(MAX(content_id), 1)) FROM content;
+            `);
+
+            res.status(200).json({ success: true, data: deleteContentResult.rows[0] });
+        } else {
+            res.status(404).json({ success: false, message: 'Content not found!' });
+        }
+    }
+    catch(error) {
+        console.error(`Error deleting content from database`, error);
+        res.status(500).json({ success: false, message: `Server error! Please try again` });
     };
 });
 
