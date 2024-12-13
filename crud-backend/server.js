@@ -115,6 +115,35 @@ app.post("/publishedContent", async (request, respond) => {
     };
 });
 
+app.post("/publishContent", async (req, res) => {
+    const { content_id } = req.body;
+
+    if (!content_id) {
+        return res.status(400).json({ success: false, message: 'Content ID is required to publish!' });
+    }
+
+    try {
+        const publishResult = await client.query(
+            `UPDATE content
+             SET status = 'published',
+                 published_at = CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kuala_Lumpur'
+             WHERE content_id = $1
+             RETURNING *;`,[content_id]
+        );
+
+        if (publishResult.rows.length > 0) {
+            res.status(200).json({ success: true, data: publishResult.rows[0] });
+        } else {
+            res.status(404).json({ success: false, message: 'Content not found or already published!' });
+        }
+    }
+    catch(err) {
+        console.error('Error publishing content: ' + err);
+        res.status(500).json({ success: false, message: "Server error. Please try again later" });
+    }
+});
+
+
 app.post("/draftContent", async (req, res) => {
     const { title, text } = req.body;
 

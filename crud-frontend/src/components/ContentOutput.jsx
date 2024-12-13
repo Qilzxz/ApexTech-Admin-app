@@ -23,21 +23,38 @@ function ContentOutput() {
                 setLoading(true)
             }
         };
-        fetchContent(); 
+        fetchContent();
     }, []);
 
-    const renderStatusBadge = (status) => {
+    const handlePublishContent = async (content_id) => {
+        try {
+            const response = await axios.post("http://localhost:5001/publishContent", {content_id})
+            if (response.data.success) {
+                window.alert("Draft content successfully published!");
+                window.location.reload();
+            } else {
+                window.alert("Failed to publish draft content: " + response.data.message);
+
+            };
+        }
+        catch(error) {
+            window.alert('Error publishing draft: ' + error.message);
+        };
+    };
+
+    const renderStatusBadge = (status, content_id) => {
         if (status === 'published') {
             return <div className='badge badge-success'>Published</div>
         } else {
             return (
                 <>
                     <div className='badge badge-neutral pointer-events-auto'>Draft</div>
-                    <div className='badge badge-primary mx-3 hover:cursor-pointer'>Click here to publish</div>
+                    <div className='badge badge-primary mx-3 hover:cursor-pointer' onClick={() => handlePublishContent(content_id)}>
+                        Click here to publish
+                    </div>
                 </>
             )
         }
-        return null;
     };
 
   return (
@@ -75,7 +92,7 @@ function ContentOutput() {
                                     </p>
                                     <div className='divider'></div>
                                     <p className='text-base'>{content.title}</p>
-                                    <div className='badge-container'>{renderStatusBadge(content.status)}</div>
+                                    <div className='badge-container'>{renderStatusBadge(content.status, content.content_id)}</div>
                                 </div>
                             </div>
                         )) : (
