@@ -58,7 +58,7 @@ function ContentOutput() {
 
     const handleDeleteContent = async () => {
         try {
-            const response = await axios.post("http://localhost:5001/deleteContent", { content_id: selectedContentId }); // Use selectedContentId
+            const response = await axios.post("http://localhost:5001/deleteContent", { content_id: selectedContentId });
             if (response.data.success) {
                 window.alert(`Post number ${selectedContentId} has been deleted!`);
                 window.location.reload();
@@ -102,9 +102,10 @@ function ContentOutput() {
 
             if (response.data.success) {
                 setSave(true);
+                setMessage("Content saved successfully! You can now continue editing or close this edit box");
                 setTimeout(() => {
-                    setMessage("Content saved successfully! You can now continue editing or close this edit box")
-                }, 5000);
+                    setMessage("");
+                }, 10000);
             }
          }
          catch(error) {
@@ -113,14 +114,31 @@ function ContentOutput() {
             setIsContentModalOpen(true);
          }
     }
-      
 
+    const checkEdited = async (edited, content_id) => {
+        if (edited === 'true') {
+            setSelectedContentId(content_id);
+            return (
+                <p className='text-xs text-neutral-500 italic'>Edited</p>
+            )
+        } else {
+            return null;
+        };
+    };
+      
     const renderStatusBadge = (status, content_id) => {
 
         if (status === 'published') {
             return (
                 <>
                     <div className='badge badge-success'>Published</div>
+                    <div className='badge badge-secondary ml-3'
+                        onClick={() => {
+                            setSelectedContentId(content_id);
+                            setIsContentModalOpen(true)
+                        }}>
+                        Edit
+                    </div>
                     <div className='badge badge-error pointer-events-auto hover:cursor-pointer ml-3'
                         onClick={() => {
                             setSelectedContentId(content_id);
@@ -130,6 +148,7 @@ function ContentOutput() {
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash-fill ml-1" viewBox="0 0 16 16">
                             <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
                         </svg>
+                        
                     </div>
                 </>
             )
@@ -199,6 +218,7 @@ function ContentOutput() {
                                                 </p>
                                                 <div className='divider'></div>
                                                 <p className='text-base'>{content.title}</p>
+                                                
                                                 <div className='badge-container'>{renderStatusBadge(content.status, content.content_id)}</div>
                                                 
                                             </div>
@@ -247,8 +267,10 @@ function ContentOutput() {
                           />
                           {save ? (<p className='text-xs text-neutral-500'>{message}</p>)
                           : <p className='text-xs text-red-500'>{errorMessage}</p>}
-                          <div className="modal-action">
-                            <button className="btn btn-sm" onClick={() => setIsContentModalOpen(false)}>Close</button>
+                            <div className="modal-action">
+                            <button className="btn btn-sm" onClick={() => {setIsContentModalOpen(false); setMessage("");}}>
+                                Close
+                            </button>
                             <button className='btn btn-secondary btn-sm rounded-md'
                             onClick={() => handleSaveContent(content.title, content.text, selectedContentId)}>
                                 Save

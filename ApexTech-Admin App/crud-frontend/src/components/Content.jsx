@@ -169,7 +169,7 @@ function Content() {
                 )}
             </div>
         </div>
-        <div className="content flex-grow flex items-center mx-6 -mt-20" style={{userSelect: "none"}}>
+        <div className="content flex-grow flex items-center mx-2 -mt-20" style={{userSelect: "none"}}>
           <div className="hero justify-center bg-base-200 w-auto md:w-3/4">
               <div className="hero-content flex-row lg:flex-row-reverse">
                 <img src="" className="max-w-sm rounded-lg shadow-2xl" />

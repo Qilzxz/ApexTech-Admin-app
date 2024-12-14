@@ -214,11 +214,17 @@ app.post("/deleteContent", async (req, res) => {
 app.post("/saveContent", async (req, res) => {
     const { title, text, content_id } = req.body;
 
+    if (!title || !text || !content_id) {
+        return res.status(400).json({ success: false, message: 'Title, text, and content_id are required.' });
+    }
+
     try {
+
         const saveResult = await client.query(
             `UPDATE CONTENT SET title = $1, text = $2 WHERE content_id = $3`,
             [title, text, content_id]
         );
+
 
         res.status(200).json({ success: true, data: saveResult.rows[0] });
     }

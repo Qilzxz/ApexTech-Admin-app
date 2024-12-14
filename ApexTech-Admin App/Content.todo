@@ -1,6 +1,6 @@
 Content Page Ideas:
 
-☐ Publish/Unpublish Status: @low 
+☐ Publish/Unpublish Status: @low
 Include a toggle switch or radio buttons to set the post status as either "Published" or "Draft."
 This way, posts can be saved without being publicly visible until they are ready.
 
@@ -12,6 +12,6 @@ format it would appear on the main website before publishing.
 Add a "Save Draft" button so that admins can save their progress without publishing the post immediately.
 This ensures data isn’t lost if they need more time.
 
-☐ Post Metrics: @low  
+☐ Post Metrics: @low
 Display a section that shows post metrics (views, likes, shares) after it’s been published.
 This will allow admins to track the engagement of each post.
